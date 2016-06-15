@@ -76,16 +76,16 @@ module Enumerable
 			for x in self
 				mapped << yield(x)
 			end
-			mapped.inspect
+			mapped
 		else
 			for x in self
 				mapped << proc.call(x)
 			end
-			mapped.inspect
+			mapped
 		end
 	end
 
-	def my_inject (param=self[0])
+	def my_inject (param=0)
 		for x in self
 			param = yield(param, x)
 		end
