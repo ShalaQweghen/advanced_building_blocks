@@ -1,94 +1,99 @@
-# I didn't use any of the defined methods in another defined method.
-
 module Enumerable
-	def my_each &block
-		for x in self
-			block.call(x)
-		end
-	end
-
-	def my_each_with_index &block
-		for x in self
-			block.call(x, self.index(x))
-		end
-	end
-
-	def my_select &block
-		selected = []
-		for x in self
-			if block.call(x)
-				selected << x
+	def my_each(&block)
+		if block_given?
+			for x in self
+				block.call(x)
 			end
 		end
-		selected
+		return self.to_enum(:my_each)
+	end
+
+	def my_each_with_index(&block)
+		if block_given?
+			idx = 0
+			self.my_each do |x|
+				block.call(x, idx) 
+				idx += 1
+			end
+		end
+		return self.to_enum(:my_each_with_index)
+	end
+
+	def my_select(&block)
+		if block_given?
+			selected = []
+			self.my_each do |x|
+				selected << x if block.call(x)
+			end
+			return selected
+		end
+		return self.to_enum(:my_select)
 	end
 
 	def my_all?
-		c = 0
-		for x in self
-			yield(x) ? c += 1 : c
+		if block_given?
+			c = 0
+			self.my_each do |x|
+				c += 1 if yield(x)
+			end
+			return c == self.size ? true : false
 		end
-		c == self.size ? true : false
+		return true
 	end
 
 	def my_any?
-		c = 0
-		for x in self
-			yield(x) ? c += 1 : c
+		if block_given?
+			c = 0
+			self.my_each do |x|
+				c += 1 if yield(x)
+			end
+			return c > 0 ? true : false
 		end
-		c > 0 ? true : false
+		return true
 	end
 
 	def my_none?
-		c = 0
-		for x in self
-			yield(x) ? c += 1 : c
-		end
-		c == 0 ? true : false
-	end
-
-	def my_count (*params)
-		c = 0
 		if block_given?
-			for x in self
-				if yield(x)
-					c += 1
-				end
+			c = 0
+			self.my_each do |x|
+				c += 1 if yield(x)
 			end
-			c
+			return c == 0 ? true : false
+		end
+		return false
+	end
+
+	def my_count(*params)
+		if block_given?
+			c = 0
+			self.my_each do |x|
+				c += 1 if yield(x)
+			end
+			return c
 		else
-			for x in self
-				if params.size > 0
-					if params[0] == x
-						c += 1
-					end
-				else
-					c += 1
-				end
-			end
-			c
+			return self.size
 		end
 	end
 
-	def my_map (proc=0)
+	def my_map(proc = nil)
+		return self.to_enum(:my_map) if !proc && !block_given?
 		mapped = []
-		if block_given?
-			for x in self
-				mapped << yield(x)
-			end
-			mapped
-		else
-			for x in self
+		if proc || (proc && block_given?)
+			self.my_each do |x|
 				mapped << proc.call(x)
 			end
-			mapped
+		elsif block_given?
+			self.my_each do |x|
+				mapped << yield(x)
+			end
 		end
+		return mapped
 	end
 
 	def my_inject (param=0)
-		for x in self
+		self.my_each do |x|
 			param = yield(param, x)
 		end
-		param
+		return param
 	end
 end
