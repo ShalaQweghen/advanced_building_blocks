@@ -78,7 +78,7 @@ module Enumerable
 
 	def my_inject(param=self.first)
 		self.my_each_with_index do |x, idx|
-			next if idx == 1
+			next if param == self.first && idx == 0
 			param = yield(param, x)
 		end
 		return param
